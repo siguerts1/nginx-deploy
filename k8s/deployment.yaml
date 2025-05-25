@@ -38,7 +38,7 @@ spec:
       volumes:
         - name: dev-html-volume
           configMap:
-            name: nginx-custom-html
+            name: dev-nginx-custom-html
 ---
 apiVersion: v1
 kind: Service
