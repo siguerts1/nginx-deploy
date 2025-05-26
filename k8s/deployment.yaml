@@ -1,4 +1,15 @@
 apiVersion: v1
+kind: Secret
+metadata:
+  name: nginx-tls
+  labels:
+    app: nginx
+type: kubernetes.io/tls
+data:
+  tls.crt: <base64-encoded-cert>
+  tls.key: <base64-encoded-key>
+---
+apiVersion: v1
 kind: ConfigMap
 metadata:
   name: nginx-custom-html
@@ -7,8 +18,8 @@ metadata:
 data:
   index.html: |
     <html>
-      <head><title>Test</title></head>
-      <body><h1>nginx everything works fine</h1></body>
+      <head><title>Secure NGINX</title></head>
+      <body><h1>nginx everything works fine 🔐</h1></body>
     </html>
 ---
 apiVersion: apps/v1
@@ -31,14 +42,20 @@ spec:
         - name: nginx
           image: nginx:stable-alpine
           ports:
-            - containerPort: 80
+            - containerPort: 443
           volumeMounts:
             - name: html-volume
               mountPath: /usr/share/nginx/html
+            - name: tls-volume
+              mountPath: /etc/nginx/tls
+              readOnly: true
       volumes:
         - name: html-volume
           configMap:
             name: nginx-custom-html
+        - name: tls-volume
+          secret:
+            secretName: nginx-tls
 ---
 apiVersion: v1
 kind: Service
@@ -51,5 +68,5 @@ spec:
   selector:
     app: nginx
   ports:
-    - port: 80
-      targetPort: 80
+    - port: 443
+      targetPort: 443
